@@ -1,0 +1,63 @@
+server:
+  port: 8888
+  ssl:
+    enabled: true
+    key-store: file:/app/certs/config-server.jks
+    key-store-password: ${key.store.password}
+    key-store-type: JKS
+    key-alias: config-server
+spring:
+  application:
+    name: config-server
+  main:
+    allow-bean-definition-overriding: true
+  config:
+    import: vault://secret/config-server
+  profiles:
+    active: vault, git
+  cloud:
+    vault:
+      host: config-vault
+      port: 8200
+      scheme: http
+      token: ${VAULT_TOKEN}
+      authentication: token
+      connection-timeout: 5000
+      fail-fast: false
+      enabled: true
+      kv:
+        enabled: true
+        backend: secret
+        default-context: config-server
+        profile-separator: '/'
+    config:
+      server:
+        vault:
+          authentication: token
+          token: ${VAULT_TOKEN}
+          order: 1
+          kv-version: 2
+          host: config-vault
+          port: 8200
+          scheme: http
+          profile-separator: '/'
+          backend: secret
+          defaultKey: client-backend
+        git:
+          uri: ${git.uri}
+          username: ${git.username}
+          password: ${git.password}
+          search-paths: '{application}'
+          default-label: main
+          clone-on-start: true
+          force-pull: true
+          tryMasterBranch: false
+          delete-untracked-branches: true
+          ignore-local-ssh-settings: false
+          refresh-rate: 180
+          timeout: 10
+          order: 2
+  security:
+    user:
+      name: ${security.username}
+      password: ${security.password}

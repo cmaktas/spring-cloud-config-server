@@ -1,0 +1,46 @@
+version: "3.9"
+services:
+
+  config-vault:
+    image: hashicorp/vault:latest
+    container_name: config-vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault_data:/vault/file
+      - vault_data:/vault/logs
+      - ./vault/config.hcl:/vault/config.hcl
+      - ./vault/configserver-policy.hcl:/vault/configserver-policy.hcl
+    command: "server -config=/vault/config.hcl"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_CONFIG_FILE: /vault/config.hcl
+      VAULT_ADDR: http://config-vault:8200
+    networks:
+      - config-server-network
+
+  config-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: config-server
+    environment:
+      VAULT_TOKEN: ${VAULT_TOKEN}
+    ports:
+      - "8888:8888"
+    networks:
+      - config-server-network
+    depends_on:
+      - config-vault
+    volumes:
+      - ./certs/config-server.jks:/app/certs/config-server.jks
+
+volumes:
+  vault_data:
+
+networks:
+  config-server-network:
+    name: config_server_network
+    driver: bridge
+

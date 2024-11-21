@@ -11,5 +11,3 @@ disable_mlock = true
 ui = true
 
 api_addr = "http://config-vault:8200"
-token_explicit_max_ttl = "365d"
-max_ttl = "365d"
